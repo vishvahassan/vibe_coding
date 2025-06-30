@@ -11,11 +11,12 @@ import Profile from './components/auth/Profile';
 import Home from './pages/Home';
 import Header from './components/Header';
 import Breakout from './games/Breakout';
-import Carrom from './games/Carrom';
+import CandyCrush from './games/CandyCrush';
 import MagicCube from './games/MagicCube';
 import MemoryCards from './games/MemoryCards';
 import PuzzleSlider from './games/PuzzleSlider';
 import SnakeGame from './games/SnakeGame';
+import SubwaySurfers from './games/SubwaySurfers';
 import Sudoku from './games/Sudoku';
 import Tetris from './games/Tetris';
 import TowerOfHanoi from './games/TowerOfHanoi';
@@ -268,10 +269,10 @@ function App() {
           } 
         />
         <Route 
-          path="/games/carrom" 
+          path="/games/candy-crush" 
           element={
             <ProtectedRoute isAuthenticated={isAuthenticated}>
-              <Carrom />
+              <CandyCrush />
             </ProtectedRoute>
           } 
         />
@@ -304,6 +305,14 @@ function App() {
           element={
             <ProtectedRoute isAuthenticated={isAuthenticated}>
               <SnakeGame />
+            </ProtectedRoute>
+          } 
+        />
+        <Route 
+          path="/games/subway-surfers" 
+          element={
+            <ProtectedRoute isAuthenticated={isAuthenticated}>
+              <SubwaySurfers />
             </ProtectedRoute>
           } 
         />

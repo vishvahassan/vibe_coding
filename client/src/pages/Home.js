@@ -204,11 +204,11 @@ const games = [
     path: '/games/tetris'
   },
   {
-    id: 'carrom',
-    title: 'Carrom',
-    description: 'Classic Indian board game with realistic physics and smooth controls',
-    icon: '🎯',
-    path: '/games/carrom'
+    id: 'subway-surfers',
+    title: 'Subway Surfers',
+    description: 'Endless runner game with 3D graphics, jumping, and coin collection',
+    icon: '🏃',
+    path: '/games/subway-surfers'
   },
   {
     id: 'memory-cards',
@@ -244,6 +244,13 @@ const games = [
     description: 'Slide tiles to solve the puzzle and create beautiful images',
     icon: '🧩',
     path: '/games/puzzle-slider'
+  },
+  {
+    id: 'candy-crush',
+    title: 'Candy Crush',
+    description: 'Match colorful candies in this addictive puzzle game',
+    icon: '🍬',
+    path: '/games/candy-crush'
   }
 ];
 
@@ -274,7 +281,7 @@ const Home = ({ user }) => {
               </p>
               <UserStats>
                 <Stat>
-                  <StatValue>9</StatValue>
+                  <StatValue>10</StatValue>
                   <StatLabel>Games Available</StatLabel>
                 </Stat>
                 <Stat>
