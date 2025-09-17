@@ -1,0 +1,105 @@
+.payment-button {
+  border: none;
+  border-radius: 8px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  text-decoration: none;
+  font-family: inherit;
+}
+
+/* Size variants */
+.payment-button.small {
+  padding: 8px 16px;
+  font-size: 0.875rem;
+}
+
+.payment-button.medium {
+  padding: 12px 24px;
+  font-size: 1rem;
+}
+
+.payment-button.large {
+  padding: 16px 32px;
+  font-size: 1.125rem;
+}
+
+/* Style variants */
+.payment-button.primary {
+  background: linear-gradient(45deg, #6366f1, #8b5cf6);
+  color: white;
+  box-shadow: 0 4px 15px rgba(99, 102, 241, 0.3);
+}
+
+.payment-button.primary:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 25px rgba(99, 102, 241, 0.4);
+}
+
+.payment-button.secondary {
+  background: linear-gradient(45deg, #ffd700, #ffed4e);
+  color: #333;
+  box-shadow: 0 4px 15px rgba(255, 215, 0, 0.3);
+}
+
+.payment-button.secondary:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 25px rgba(255, 215, 0, 0.4);
+}
+
+.payment-button.outline {
+  background: transparent;
+  color: #6366f1;
+  border: 2px solid #6366f1;
+}
+
+.payment-button.outline:hover {
+  background: #6366f1;
+  color: white;
+  transform: translateY(-2px);
+}
+
+.payment-button.ghost {
+  background: transparent;
+  color: #6366f1;
+}
+
+.payment-button.ghost:hover {
+  background: rgba(99, 102, 241, 0.1);
+  transform: translateY(-1px);
+}
+
+/* Disabled state */
+.payment-button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none !important;
+}
+
+/* Focus state */
+.payment-button:focus {
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.3);
+}
+
+/* Active state */
+.payment-button:active {
+  transform: translateY(0);
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .payment-button.large {
+    padding: 14px 28px;
+    font-size: 1rem;
+  }
+  
+  .payment-button.medium {
+    padding: 10px 20px;
+    font-size: 0.9rem;
+  }
+} 

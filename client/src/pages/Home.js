@@ -2,6 +2,7 @@ import React from 'react';
 import { Link } from 'react-router-dom';
 import styled from 'styled-components';
 import { motion } from 'framer-motion';
+import PaymentButton from '../components/PaymentButton';
 
 const HomeContainer = styled.div`
   min-height: 100vh;
@@ -251,6 +252,20 @@ const games = [
     description: 'Match colorful candies in this addictive puzzle game',
     icon: '🍬',
     path: '/games/candy-crush'
+  },
+  {
+    id: 'flappy-bird',
+    title: 'Flappy Bird',
+    description: 'Navigate through pipes in this addictive flying game',
+    icon: '🐦',
+    path: '/games/flappy-bird'
+  },
+  {
+    id: 'pong',
+    title: 'Pong',
+    description: 'Classic two-player paddle game with modern graphics',
+    icon: '🏓',
+    path: '/games/pong'
   }
 ];
 
@@ -314,6 +329,67 @@ const Home = ({ user }) => {
             </GameCard>
           ))}
         </GamesGrid>
+
+        {/* Premium Section */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5, delay: 0.8 }}
+          style={{
+            background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+            borderRadius: '20px',
+            padding: '3rem',
+            marginTop: '3rem',
+            textAlign: 'center',
+            color: 'white'
+          }}
+        >
+          <h2 style={{ fontSize: '2.5rem', marginBottom: '1rem', fontWeight: '700' }}>
+            🚀 Unlock Premium Features
+          </h2>
+          <p style={{ fontSize: '1.2rem', marginBottom: '2rem', opacity: 0.9 }}>
+            Get access to exclusive games, advanced features, and ad-free experience
+          </p>
+          <div style={{ display: 'flex', justifyContent: 'center', gap: '1rem', flexWrap: 'wrap' }}>
+            <PaymentButton 
+              variant="secondary" 
+              size="large"
+              onPaymentSuccess={(plan) => {
+                console.log('Premium upgrade successful:', plan);
+                alert(`Welcome to ${plan.name}! 🎉`);
+              }}
+            >
+              💎 Upgrade to Premium
+            </PaymentButton>
+            <Link 
+              to="/profile" 
+              style={{
+                padding: '16px 32px',
+                background: 'rgba(255, 255, 255, 0.2)',
+                color: 'white',
+                textDecoration: 'none',
+                borderRadius: '8px',
+                fontWeight: '600',
+                transition: 'all 0.3s ease',
+                border: '2px solid rgba(255, 255, 255, 0.3)'
+              }}
+              onMouseEnter={(e) => {
+                e.target.style.background = 'rgba(255, 255, 255, 0.3)';
+                e.target.style.transform = 'translateY(-2px)';
+              }}
+              onMouseLeave={(e) => {
+                e.target.style.background = 'rgba(255, 255, 255, 0.2)';
+                e.target.style.transform = 'translateY(0)';
+              }}
+            >
+              View Profile
+            </Link>
+          </div>
+          <div style={{ marginTop: '2rem', fontSize: '0.9rem', opacity: 0.8 }}>
+            <p>💳 Pay with GPay, Paytm, PhonePe, Cards, UPI & more</p>
+            <p>🔒 Secure payments powered by Razorpay</p>
+          </div>
+        </motion.div>
       </Content>
     </HomeContainer>
   );

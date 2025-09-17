@@ -10,10 +10,13 @@ import ResetPassword from './components/auth/ResetPassword';
 import Profile from './components/auth/Profile';
 import Home from './pages/Home';
 import Header from './components/Header';
+import PaymentButton from './components/PaymentButton';
 import Breakout from './games/Breakout';
 import CandyCrush from './games/CandyCrush';
+import FlappyBird from './games/FlappyBird';
 import MagicCube from './games/MagicCube';
 import MemoryCards from './games/MemoryCards';
+import Pong from './games/Pong';
 import PuzzleSlider from './games/PuzzleSlider';
 import SnakeGame from './games/SnakeGame';
 import SubwaySurfers from './games/SubwaySurfers';
@@ -206,6 +209,27 @@ function App() {
       
       {isAuthenticated && <Header user={user} onLogout={handleLogout} />}
       
+      {/* Floating Payment Button */}
+      {isAuthenticated && (
+        <div style={{
+          position: 'fixed',
+          bottom: '20px',
+          right: '20px',
+          zIndex: 1000
+        }}>
+          <PaymentButton 
+            variant="secondary"
+            size="large"
+            onPaymentSuccess={(plan) => {
+              console.log('Payment successful for plan:', plan);
+              // You can add logic here to unlock premium features
+            }}
+          >
+            💎 Upgrade to Premium
+          </PaymentButton>
+        </div>
+      )}
+      
       <Routes>
         {/* Auth Routes */}
         <Route 
@@ -337,6 +361,22 @@ function App() {
           element={
             <ProtectedRoute isAuthenticated={isAuthenticated}>
               <TowerOfHanoi />
+            </ProtectedRoute>
+          } 
+        />
+        <Route 
+          path="/games/flappy-bird" 
+          element={
+            <ProtectedRoute isAuthenticated={isAuthenticated}>
+              <FlappyBird />
+            </ProtectedRoute>
+          } 
+        />
+        <Route 
+          path="/games/pong" 
+          element={
+            <ProtectedRoute isAuthenticated={isAuthenticated}>
+              <Pong />
             </ProtectedRoute>
           } 
         />

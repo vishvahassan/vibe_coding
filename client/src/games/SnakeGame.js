@@ -98,7 +98,8 @@ const Stats = styled.div`
   display: flex;
   gap: 2rem;
   margin-bottom: 2rem;
-  text-align: center;
+  flex-wrap: wrap;
+  justify-content: center;
 `;
 
 const StatItem = styled.div`
