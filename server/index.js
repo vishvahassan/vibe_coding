@@ -11,38 +11,66 @@ require('dotenv').config();
 
 const app = express();
 const server = http.createServer(app);
+
+// Environment configuration
+const PORT = process.env.PORT || 5001;
+const NODE_ENV = process.env.NODE_ENV || 'development';
+const CLIENT_URL = process.env.CLIENT_URL || (NODE_ENV === 'production' ? 'https://your-app.vercel.app' : 'http://localhost:3000');
+const ALLOW_ALL_ORIGINS = process.env.ALLOW_ALL_ORIGINS === 'true';
+
+// Socket.IO configuration with proper CORS
 const io = socketIo(server, {
   cors: {
-    origin: process.env.CLIENT_URL || "http://localhost:3000",
-    methods: ["GET", "POST"]
-  }
+    origin: ALLOW_ALL_ORIGINS ? true : [CLIENT_URL, 'http://localhost:3000'],
+    methods: ["GET", "POST"],
+    credentials: true
+  },
+  transports: ['websocket', 'polling']
 });
 
-// Initialize Razorpay
-const razorpay = new Razorpay({
-  key_id: process.env.RAZORPAY_KEY_ID || 'rzp_test_YOUR_KEY_ID',
-  key_secret: process.env.RAZORPAY_KEY_SECRET || 'YOUR_KEY_SECRET'
-});
+// Initialize Razorpay with error handling
+let razorpay = null;
+if (process.env.RAZORPAY_KEY_ID && process.env.RAZORPAY_KEY_SECRET) {
+  razorpay = new Razorpay({
+    key_id: process.env.RAZORPAY_KEY_ID,
+    key_secret: process.env.RAZORPAY_KEY_SECRET
+  });
+  console.log('✅ Razorpay initialized successfully');
+} else {
+  console.warn('⚠️  Razorpay not initialized - missing environment variables');
+}
 
-// Middleware
-app.use(helmet());
-app.use(cors());
-app.use(express.json());
+// Security middleware
+app.use(helmet({
+  contentSecurityPolicy: false, // Allow for development
+  crossOriginEmbedderPolicy: false
+}));
 
-// Trust proxy for rate limiting
+// CORS configuration
+app.use(cors({
+  origin: ALLOW_ALL_ORIGINS ? true : [CLIENT_URL, 'http://localhost:3000'],
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization']
+}));
+
+app.use(express.json({ limit: '10mb' }));
+app.use(express.urlencoded({ extended: true, limit: '10mb' }));
+
+// Trust proxy for rate limiting and deployment
 app.set('trust proxy', 1);
 
-// Rate limiting
+// Rate limiting with different limits for development/production
 const limiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 100 // limit each IP to 100 requests per windowMs
+  max: NODE_ENV === 'production' ? 100 : 1000, // More lenient in development
+  message: {
+    error: 'Too many requests from this IP, please try again later.'
+  },
+  standardHeaders: true,
+  legacyHeaders: false,
 });
 app.use(limiter);
-
-// Serve static files only in production
-if (process.env.NODE_ENV === 'production') {
-  app.use(express.static(path.join(__dirname, '../client/build')));
-}
 
 // Game state management
 const gameStates = new Map();
@@ -93,10 +121,25 @@ app.get('/api/health', (req, res) => {
 // Payment Routes
 app.post('/api/payments/create-order', async (req, res) => {
   try {
+    if (!razorpay) {
+      return res.status(503).json({
+        success: false,
+        error: 'Payment service not configured. Please contact support.'
+      });
+    }
+
     const { amount, currency = 'INR', receipt = 'v-magic-cube-' + Date.now() } = req.body;
     
+    // Validate amount
+    if (!amount || amount < 1) {
+      return res.status(400).json({
+        success: false,
+        error: 'Invalid amount provided'
+      });
+    }
+    
     const options = {
-      amount: amount * 100, // Razorpay expects amount in paise
+      amount: Math.round(amount * 100), // Razorpay expects amount in paise
       currency,
       receipt,
       payment_capture: 1
@@ -106,24 +149,40 @@ app.post('/api/payments/create-order', async (req, res) => {
     res.json({
       success: true,
       order: order,
-      key_id: process.env.RAZORPAY_KEY_ID || 'rzp_test_YOUR_KEY_ID'
+      key_id: process.env.RAZORPAY_KEY_ID
     });
   } catch (error) {
     console.error('Payment order creation error:', error);
     res.status(500).json({
       success: false,
-      error: 'Failed to create payment order'
+      error: 'Failed to create payment order',
+      details: NODE_ENV === 'development' ? error.message : undefined
     });
   }
 });
 
 app.post('/api/payments/verify', async (req, res) => {
   try {
+    if (!razorpay) {
+      return res.status(503).json({
+        success: false,
+        error: 'Payment service not configured'
+      });
+    }
+
     const { razorpay_order_id, razorpay_payment_id, razorpay_signature } = req.body;
+    
+    // Validate required fields
+    if (!razorpay_order_id || !razorpay_payment_id || !razorpay_signature) {
+      return res.status(400).json({
+        success: false,
+        error: 'Missing required payment verification fields'
+      });
+    }
     
     const body = razorpay_order_id + "|" + razorpay_payment_id;
     const expectedSignature = crypto
-      .createHmac("sha256", process.env.RAZORPAY_KEY_SECRET || 'YOUR_KEY_SECRET')
+      .createHmac("sha256", process.env.RAZORPAY_KEY_SECRET)
       .update(body.toString())
       .digest("hex");
 
@@ -140,14 +199,15 @@ app.post('/api/payments/verify', async (req, res) => {
     } else {
       res.status(400).json({
         success: false,
-        error: 'Payment verification failed'
+        error: 'Payment verification failed - invalid signature'
       });
     }
   } catch (error) {
     console.error('Payment verification error:', error);
     res.status(500).json({
       success: false,
-      error: 'Payment verification failed'
+      error: 'Payment verification failed',
+      details: NODE_ENV === 'development' ? error.message : undefined
     });
   }
 });
@@ -291,13 +351,87 @@ app.get('/api/games', (req, res) => {
   res.json(games);
 });
 
-// Serve React app for all other routes
-app.get('*', (req, res) => {
-  res.sendFile(path.join(__dirname, '../client/build/index.html'));
+// Serve static files in production
+if (NODE_ENV === 'production') {
+  const buildPath = path.join(__dirname, '../client/build');
+  
+  // Serve static files from React build
+  app.use(express.static(buildPath, {
+    maxAge: '1d', // Cache static files for 1 day
+    etag: true
+  }));
+  
+  // Handle React routing - return index.html for all non-API routes
+  app.get('*', (req, res) => {
+    // Skip API routes
+    if (req.path.startsWith('/api/')) {
+      return res.status(404).json({ error: 'API endpoint not found' });
+    }
+    
+    res.sendFile(path.join(buildPath, 'index.html'), (err) => {
+      if (err) {
+        console.error('Error serving index.html:', err);
+        res.status(500).send('Error loading application');
+      }
+    });
+  });
+} else {
+  // Development route - provide helpful message
+  app.get('*', (req, res) => {
+    if (!req.path.startsWith('/api/')) {
+      res.json({
+        message: 'Development server running',
+        note: 'Start the React development server with "npm run client"',
+        apiEndpoints: ['/api/health', '/api/games', '/api/payments/plans']
+      });
+    }
+  });
+}
+
+// Global error handler
+app.use((err, req, res, next) => {
+  console.error('Global error handler:', err);
+  res.status(500).json({
+    success: false,
+    error: 'Internal server error',
+    details: NODE_ENV === 'development' ? err.message : undefined
+  });
 });
 
-const PORT = process.env.PORT || 5001;
-server.listen(PORT, () => {
+// 404 handler for API routes
+app.use('/api/*', (req, res) => {
+  res.status(404).json({
+    success: false,
+    error: 'API endpoint not found'
+  });
+});
+
+// Start server
+server.listen(PORT, '0.0.0.0', () => {
   console.log(`🚀 V Magic Cube Server running on port ${PORT}`);
+  console.log(`🌍 Environment: ${NODE_ENV}`);
   console.log(`🎮 Multiple games available!`);
+  console.log(`📱 Client URL: ${CLIENT_URL}`);
+  if (razorpay) {
+    console.log(`💳 Payment system: Ready`);
+  } else {
+    console.log(`⚠️  Payment system: Not configured`);
+  }
+});
+
+// Graceful shutdown
+process.on('SIGTERM', () => {
+  console.log('SIGTERM received, shutting down gracefully');
+  server.close(() => {
+    console.log('Process terminated');
+    process.exit(0);
+  });
+});
+
+process.on('SIGINT', () => {
+  console.log('SIGINT received, shutting down gracefully');
+  server.close(() => {
+    console.log('Process terminated');
+    process.exit(0);
+  });
 }); 
