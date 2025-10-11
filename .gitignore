@@ -1,10 +1,15 @@
 # Dependencies
 node_modules/
 */node_modules/
+**/node_modules/
 
 # Production builds
+build/
 client/build/
 client/dist/
+dist/
+**/build/
+**/dist/
 
 # Environment variables
 .env
@@ -93,4 +98,16 @@ temp/
 .Spotlight-V100
 .Trashes
 ehthumbs.db
-Thumbs.db 
+Thumbs.db
+
+# Project specific
+lead Gen/
+*.webarchive
+*.log
+
+# IDE files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~ 
